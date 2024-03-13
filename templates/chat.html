@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Interface</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: white;
+        }
+
+        #container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #chat-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            border: 100px solid #fff;
+            padding: 10px;
+            background-color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .user-message,
+        .detected-module,
+        .detected-actions {
+            margin-bottom: 10px;
+        }
+
+        .user-message p,
+        .detected-module p,
+        .detected-actions p {
+            margin: 0;
+        }
+
+        .user-message {
+            text-align: left;
+        }
+
+        .detected-module,
+        .detected-actions {
+            text-align: left;
+        }
+
+        #chat-form {
+            position: fixed;
+            bottom: 0;
+            width: 50%;
+            left: 25%;
+            background-color: #fff;
+            padding: 10px;
+            display: flex;
+        }
+
+        #user_input {
+            flex: 1;
+            margin-right: 10px;
+            border-radius: 10px;
+            border: 1px solid black;
+        }
+
+        #send-button {
+            background-color: #74AA9C;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+        }
+
+        #main-user {
+            margin: auto;
+        }
+
+        #options-container {
+            margin-top: 20px;
+        }
+
+        .option-button {
+            background-color: #74AA9C;
+            color: white;
+            border: none;
+            padding: 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin-right: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .child {
+            margin: 10px 10px;
+            height: 40px;
+            width: 120px;
+            background-color: #74AA9C;
+            border-radius: 10px;
+        }
+
+        .suggestions {
+            display: flex;
+            text-align: center;
+            margin: auto;
+            width: 50%;
+        }
+
+        .suggestions-container {
+            height: 100px;
+        }
+
+        .child {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha384-...your-sha384-code-here..." crossorigin="anonymous">
+
+</head>
+
+<body>
+    <h3 style="position: fixed;margin: 40px;padding-left:12rem;color: #74AA9C;font-size: 25px;">ChatBot</h3>
+    <div style="margin: auto; width: 50%; height: 48vh;" id="chat-container">
+        {% for entry in chat_history %}
+        <div class="main-user">
+            <div class="user-message">
+                <div>
+                    <h4>User:</h4>
+                </div>
+                <div>
+                    <p>{{ entry['user'] }}</p>
+                </div>
+            </div>
+
+            {% if entry['bot_module'] %}
+            <div class="detected-module">
+                <div>
+                    <h4>Bot:</h4>
+                </div>
+                <p>Detected Module: {{ entry['bot_module'] }}</p>
+            </div>
+            {% endif %}
+
+            {% if entry['bot_actions'] %}
+            <div class="detected-actions">
+                <p>Possible Actions: {{ entry['bot_actions'] }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Add this section for displaying options -->
+    <div id="options-container">
+        {% if possible_actions %}
+        <p>Choose an option:</p>
+        <form action="/select_option" method="post">
+            {% for option in possible_actions %}
+            <button type="submit" class="option-button" name="selected_option" value="{{ option }}">Select {{ option
+                }}</button>
+            {% endfor %}
+        </form>
+        {% endif %}
+    </div>
+
+    <div class="suggestions-container">
+        <div class="suggestions">
+        </div>
+    </div>
+
+    <form id="chat-form">
+        <input type="text" id="user_input" name="user_input" placeholder="Ask questions">
+        <!-- Use Font Awesome up arrow icon -->
+        <button type="submit" id="send-button"><i class="fas fa-arrow-up"></i></button>
+    </form>
+
+    <!--  -->
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $("#chat-form").attr("action_url", "/");
+
+        // Chat with models and get input from 
+        $('#send-button').on('click', function (e) {
+            // Prevent the default form submission
+            e.preventDefault();
+
+            // Get user input
+            var userInput = $('#user_input').val();
+            $('#user_input').val("");
+
+            // URL
+            var url = $("#chat-form").attr("action_url");
+            if (url == "/"){
+                // Perform asynchronous form submission
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    data: { 'user_input': userInput },
+                    success: function (response) {
+                        console.log(response);
+                        $('#user_input').val("");
+                        $("#chat-form").attr("action_url", "/");
+                        // Create and append HTML elements
+                        var chatContainer = $('#chat-container');
+                        var newEntry = $('<div class="main-user"> ' +
+                            '<div class="user-message">' +
+                            '<div><h4>User:</h4></div>' +
+                            '<div><p>' + response.user + '</p></div>' +
+                            '</div>' +
+                            (response.bot_module ?
+                                '<div class="detected-module">' +
+                                '<div><h4>Bot:</h4></div>' +
+                                '<p>Detected Module: ' + response.bot_module + '</p>' +
+                                '</div>' : '') +
+                            (response.bot_actions ?
+                                '<div class="detected-actions">' +
+                                '<p>Possible Actions: ' + response.bot_actions + '</p>' +
+                                '</div>' : '') +
+                            '</div>');
+                        chatContainer.append(newEntry);
+
+                        if (response.type == "suggestions" && response.suggestions.length > 0) {
+                            $(".suggestions-container").html("")
+                            // Create and append suggestions container
+                            var suggestionsContainer = $('<div class="suggestions-container"></div>');
+                            var suggestionsDiv = $('<div class="suggestions"></div>');
+
+                            // Loop through suggestions and append them
+                            response.suggestions.forEach(function (suggestion) {
+                                console.log(suggestion);
+                                var suggestionDiv = $('<div class="child suggestions-data"><span>' + suggestion + '</span></div>');
+                                suggestionsDiv.append(suggestionDiv);
+                            });
+
+                            console.log(suggestionsDiv);
+                            suggestionsContainer.append(suggestionsDiv);
+
+                            // Append suggestions container to the chat container
+                            $('.suggestions-container').append(suggestionsContainer);
+                            $("#chat-form").hide(1000).attr("action_url", "/new-chat");
+
+                        }
+                        else if (response.type == "clear_chat") {
+                            location.reload();
+                        }
+
+                        scrollToBottom();
+                    },
+                    error: function (error) {
+                        // Clear the input field
+                        $('#user_input').val("");
+
+                        // Handle errors if any
+                        console.error(error);
+                    }
+                });
+            } else {
+                // Perform asynchronous form submission
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    data: { 'user_input': userInput },
+                    success: function (response) {
+                        console.log(response);
+                        $('#user_input').val("");
+                        $("#chat-form").attr("action_url", "/");
+                        
+                        // Create and append HTML elements
+                        var chatContainer = $('#chat-container');
+                        var newEntry = $('<div class="main-user"> ' +
+                            '<div class="user-message">' +
+                            '<div><h4>User:</h4></div>' +
+                            '<div><p>' + response.user + '</p></div>' +
+                            '</div></div>')
+                            
+                        chatContainer.append(newEntry);
+                    },
+                    error: function (error) {
+                        // Clear the input field
+                        $('#user_input').val("");
+
+                        // Handle errors if any
+                        console.error(error);
+                    }
+                });
+            }
+        
+        });
+
+        // Suggestions on click and show input box
+        $(document).on('click', '.suggestions-data', function () {
+            var content = $(this).html();
+            console.log(content, 'content');
+            $("#chat-form").show(1000);
+            $("#chat-form input").attr('placeholder', 'Ask someting');
+
+            var newEntry = $('<div class="main-user"> ' +
+                '<div class="user-message">' +
+                '<div><h4>User:</h4></div>' +
+                '<div><p>' + content + '</p></div>' +
+                '</div>' +
+
+                '<div class="detected-module">' +
+                '<div><h4>Bot:</h4></div>' +
+                '<p> Which ' + splitString(content) + ' you want to see ? </p>' +
+                '</div>'
+            );
+            var chatContainer = $('#chat-container');
+            chatContainer.append(newEntry);
+            $(".suggestions").hide(1000);
+            scrollToBottom();
+        })
+
+        // splitString
+        function splitString(inputString) {
+            return inputString.split('_')[0];
+        }
+
+        // scrollToBottom
+        function scrollToBottom() {
+            var chatContainer = document.getElementById('chat-container');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    });
+</script>
+
+</html>

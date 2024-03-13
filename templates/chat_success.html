@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Interface</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: white;
+        }
+
+        #container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #chat-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            border: 100px solid #fff;
+            padding: 10px;
+            background-color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .user-message, .detected-module, .detected-actions {
+            margin-bottom: 10px;
+        }
+
+        .user-message p, .detected-module p, .detected-actions p {
+            margin: 0;
+        }
+
+        .user-message {
+            text-align: left;
+        }
+
+        .detected-module, .detected-actions {
+            text-align: left;
+        }
+
+        #chat-form {
+            position: fixed;
+            bottom: 0;
+            width: 50%;
+            left: 25%;
+            background-color: #fff;
+            padding: 10px;
+            display: flex;
+        }
+
+        #user_input {
+            flex: 1;
+            margin-right: 10px;
+            border-radius: 10px;
+            border: 1px solid black;
+        }
+
+        #send-button {
+            background-color: #74AA9C;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+        }
+
+        #main-user {
+            margin: auto;
+        }
+
+    </style>
+    <!-- Include Font Awesome CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha384-...your-sha384-code-here..." crossorigin="anonymous">
+</head>
+<body>
+    <h3 style="position: fixed;margin: 40px;padding-left:12rem;color: #74AA9C;font-size: 25px;">ChatBot</h3>
+
+    <div style="width: 55%;margin-left: 350px;height: 69vh;" id="chat-container">
+       
+        {% for entry in chat_history %}
+        
+       <div class="main-user"> 
+        <div class="user-message">
+        <div> <h4>User:</h4></div>
+       <div> <p>{{ entry['user'] }}</p></div>
+    </div>
+
+    {% if entry['bot_module'] %}
+        <div class="detected-module">
+            <div> <h4>Bot:</h4></div>
+            <p>Detected Module: {{ entry['bot_module'] }}</p>
+        </div>
+    {% endif %}
+
+    {% if entry['bot_actions'] %}
+        <div class="detected-actions">
+            <p>Possible Actions: {{ entry['bot_actions'] }}</p>
+        </div>
+    {% endif %}
+{% endfor %}</div>
+
+           
+    </div>
+    
+    <form action="/" method="post" id="chat-form">
+        <input type="text" id="user_input" name="user_input">
+        <!-- Use Font Awesome up arrow icon -->
+        <button type="submit" id="send-button"><i class="fas fa-arrow-up"></i></button>
+    </form>
+</body>
+</html>
